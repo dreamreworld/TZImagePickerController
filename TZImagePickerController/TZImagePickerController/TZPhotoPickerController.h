@@ -14,6 +14,9 @@
 @property (nonatomic, assign) BOOL isFirstAppear;
 @property (nonatomic, assign) NSInteger columnNumber;
 @property (nonatomic, strong) TZAlbumModel *model;
+
+- (void)refreshBottomToolBarStatus;
+- (void)doneButtonClick;
 @end
 
 
