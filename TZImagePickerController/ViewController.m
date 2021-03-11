@@ -8,7 +8,7 @@
 
 #import "ViewController.h"
 #import "TZImagePickerController.h"
-#import "UIView+Layout.h"
+#import "UIView+TZLayout.h"
 #import "TZTestCell.h"
 #import <Photos/Photos.h>
 #import "LxGridViewFlowLayout.h"
@@ -213,6 +213,7 @@
             TZImagePickerController *imagePickerVc = [[TZImagePickerController alloc] initWithSelectedAssets:_selectedAssets selectedPhotos:_selectedPhotos index:indexPath.item];
             imagePickerVc.maxImagesCount = self.maxCountTF.text.integerValue;
             imagePickerVc.allowPickingGif = self.allowPickingGifSwitch.isOn;
+            imagePickerVc.autoSelectCurrentWhenDone = NO;
             imagePickerVc.allowPickingOriginalPhoto = self.allowPickingOriginalPhotoSwitch.isOn;
             imagePickerVc.allowPickingMultipleVideo = self.allowPickingMuitlpleVideoSwitch.isOn;
             imagePickerVc.showSelectedIndex = self.showSelectedIndexSwitch.isOn;
@@ -259,6 +260,9 @@
     if (self.maxCountTF.text.integerValue <= 0) {
         return;
     }
+    // 设置languageBundle以使用其它语言，必须在TZImagePickerController初始化前设置 / Set languageBundle to use other language
+    // [TZImagePickerConfig sharedInstance].languageBundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"tz-ru" ofType:@"lproj"]];
+
     TZImagePickerController *imagePickerVc = [[TZImagePickerController alloc] initWithMaxImagesCount:self.maxCountTF.text.integerValue columnNumber:self.columnNumberTF.text.integerValue delegate:self pushPhotoPickerVc:YES];
     // imagePickerVc.barItemTextColor = [UIColor blackColor];
     // [imagePickerVc.navigationBar setTitleTextAttributes:@{NSForegroundColorAttributeName : [UIColor blackColor]}];
@@ -279,6 +283,7 @@
     [imagePickerVc setUiImagePickerControllerSettingBlock:^(UIImagePickerController *imagePickerController) {
         imagePickerController.videoQuality = UIImagePickerControllerQualityTypeHigh;
     }];
+    // imagePickerVc.autoSelectCurrentWhenDone = NO;
     
     // imagePickerVc.photoWidth = 1600;
     // imagePickerVc.photoPreviewMaxWidth = 1600;
@@ -292,9 +297,11 @@
     imagePickerVc.iconThemeColor = [UIColor colorWithRed:31 / 255.0 green:185 / 255.0 blue:34 / 255.0 alpha:1.0];
     imagePickerVc.showPhotoCannotSelectLayer = YES;
     imagePickerVc.cannotSelectLayerColor = [[UIColor whiteColor] colorWithAlphaComponent:0.8];
+    /*
     [imagePickerVc setPhotoPickerPageUIConfigBlock:^(UICollectionView *collectionView, UIView *bottomToolBar, UIButton *previewButton, UIButton *originalPhotoButton, UILabel *originalPhotoLabel, UIButton *doneButton, UIImageView *numberImageView, UILabel *numberLabel, UIView *divideLine) {
         [doneButton setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
     }];
+     */
     /*
     [imagePickerVc setAssetCellDidSetModelBlock:^(TZAssetCell *cell, UIImageView *imageView, UIImageView *selectImageView, UILabel *indexLabel, UIView *bottomView, UILabel *timeLength, UIImageView *videoImgView) {
         cell.contentView.clipsToBounds = YES;
@@ -338,7 +345,7 @@
      cropView.layer.borderWidth = 2.0;
      }];*/
     
-    //imagePickerVc.allowPreview = NO;
+    // imagePickerVc.allowPreview = NO;
     // 自定义导航栏上的返回按钮
     /*
     [imagePickerVc setNavLeftBarButtonSettingBlock:^(UIButton *leftButton){
@@ -379,9 +386,6 @@
     
     // 设置首选语言 / Set preferred language
     // imagePickerVc.preferredLanguage = @"zh-Hans";
-    
-    // 设置languageBundle以使用其它语言 / Set languageBundle to use other language
-    // imagePickerVc.languageBundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"tz-ru" ofType:@"lproj"]];
     
 #pragma mark - 到这里为止
     
@@ -527,11 +531,6 @@
     [_selectedAssets addObject:asset];
     [_selectedPhotos addObject:image];
     [_collectionView reloadData];
-    
-    if ([asset isKindOfClass:[PHAsset class]]) {
-        PHAsset *phAsset = asset;
-        NSLog(@"location:%@",phAsset.location);
-    }
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
@@ -633,7 +632,7 @@
 
 // Decide asset show or not't
 // 决定asset显示与否
-- (BOOL)isAssetCanSelect:(PHAsset *)asset {
+- (BOOL)isAssetCanBeDisplayed:(PHAsset *)asset {
     /*
     switch (asset.mediaType) {
         case PHAssetMediaTypeVideo: {
@@ -643,8 +642,40 @@
         } break;
         case PHAssetMediaTypeImage: {
             // 图片尺寸
-            if (phAsset.pixelWidth > 3000 || phAsset.pixelHeight > 3000) {
-                // return NO;
+            if (asset.pixelWidth > 3000 || asset.pixelHeight > 3000) {
+                 return NO;
+            }
+            return YES;
+        } break;
+        case PHAssetMediaTypeAudio:
+            return NO;
+            break;
+        case PHAssetMediaTypeUnknown:
+            return NO;
+            break;
+        default: break;
+    }
+     */
+    return YES;
+}
+
+// Decide asset can be selected
+// 决定照片能否被选中
+- (BOOL)isAssetCanBeSelected:(PHAsset *)asset {
+    /*
+    switch (asset.mediaType) {
+        case PHAssetMediaTypeVideo: {
+            // 视频时长
+            // NSTimeInterval duration = phAsset.duration;
+            return NO;
+        } break;
+        case PHAssetMediaTypeImage: {
+            // 图片尺寸
+            if (asset.pixelWidth > 3000 || asset.pixelHeight > 3000) {
+                UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"不支持选择超大图片" message:nil preferredStyle:UIAlertControllerStyleAlert];
+                [alertController addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+                [self.presentedViewController presentViewController:alertController animated:YES completion:nil];
+                return NO;
             }
             return YES;
         } break;
