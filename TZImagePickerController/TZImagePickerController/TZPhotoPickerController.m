@@ -748,16 +748,16 @@ static CGFloat itemMargin = 5;
 - (void)pushImagePickerController {
     // 提前定位
     TZImagePickerController *tzImagePickerVc = (TZImagePickerController *)self.navigationController;
-    if (tzImagePickerVc.allowCameraLocation) {
-        __weak typeof(self) weakSelf = self;
-        [[TZLocationManager manager] startLocationWithSuccessBlock:^(NSArray<CLLocation *> *locations) {
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            strongSelf.location = [locations firstObject];
-        } failureBlock:^(NSError *error) {
-            __strong typeof(weakSelf) strongSelf = weakSelf;
-            strongSelf.location = nil;
-        }];
-    }
+//    if (tzImagePickerVc.allowCameraLocation) {
+//        __weak typeof(self) weakSelf = self;
+//        [[TZLocationManager manager] startLocationWithSuccessBlock:^(NSArray<CLLocation *> *locations) {
+//            __strong typeof(weakSelf) strongSelf = weakSelf;
+//            strongSelf.location = [locations firstObject];
+//        } failureBlock:^(NSError *error) {
+//            __strong typeof(weakSelf) strongSelf = weakSelf;
+//            strongSelf.location = nil;
+//        }];
+//    }
     
     UIImagePickerControllerSourceType sourceType = UIImagePickerControllerSourceTypeCamera;
     if ([UIImagePickerController isSourceTypeAvailable: sourceType]) {
@@ -980,7 +980,7 @@ static CGFloat itemMargin = 5;
         return;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.model refreshFetchResult];        
+        [self.model refreshFetchResult];
         [self fetchAssetModels];
     });
 }
